@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:quizzler_app/question.dart';
+import 'package:quizzler_app/quiz_brain.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
 
 void main() => runApp(Quizzler());
 
@@ -26,19 +27,34 @@ class QuizPage extends StatefulWidget {
   _QuizPageState createState() => _QuizPageState();
 }
 
+QuizBrain quizBrain = QuizBrain();
+
 class _QuizPageState extends State<QuizPage> {
-  int questionIndex = 0;
   List<Widget> scoreKeeper = [];
 
-  List<Question> questionsList = [
-    Question(
-        question: 'You can lead a cow down stairs but not up stairs.',
-        answer: false),
-    Question(
-        question: 'Approximately one quarter of human bones are in the feet.',
-        answer: true),
-    Question(question: 'A slug\'s blood is green.', answer: true),
-  ];
+  void checkAnswer(bool userAnswer) {
+    bool correctAnswer = quizBrain.getQuestionAnswer();
+
+    setState(() {
+      if (quizBrain.isFinished()) {
+        Alert(
+                context: context,
+                title: "Done!",
+                desc: "You've reached the end of the quiz.")
+            .show();
+        quizBrain.reset();
+        scoreKeeper.clear();
+      } else {
+        if (userAnswer == correctAnswer) {
+          scoreKeeper.add(Icon(Icons.check, color: Colors.green));
+        } else {
+          scoreKeeper.add(Icon(Icons.close, color: Colors.red));
+        }
+
+        quizBrain.nextQuestion();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +68,7 @@ class _QuizPageState extends State<QuizPage> {
             padding: EdgeInsets.all(10.0),
             child: Center(
               child: Text(
-                questionsList[questionIndex].questionText,
+                quizBrain.getQuestionText(),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 25.0,
@@ -76,18 +92,7 @@ class _QuizPageState extends State<QuizPage> {
                 ),
               ),
               onPressed: () {
-                bool correctAnswer =
-                    questionsList[questionIndex].questionAnswer;
-
-                if (correctAnswer == true) {
-                  print("correct");
-                } else {
-                  print("wrong");
-                }
-
-                setState(() {
-                  questionIndex++;
-                });
+                checkAnswer(true);
               },
             ),
           ),
@@ -105,19 +110,7 @@ class _QuizPageState extends State<QuizPage> {
                 ),
               ),
               onPressed: () {
-                //The user picked false.
-                bool correctAnswer =
-                    questionsList[questionIndex].questionAnswer;
-
-                if (correctAnswer == false) {
-                  print("correct");
-                } else {
-                  print("wrong");
-                }
-
-                setState(() {
-                  questionIndex++;
-                });
+                checkAnswer(false);
               },
             ),
           ),
